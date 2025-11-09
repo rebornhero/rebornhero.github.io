@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成语填字消消乐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            max-width: 1200px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 200px;
+        }
+
+        .header {
+            color: white;
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .score-board {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            color: white;
+        }
+
+        .score-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .score-item .label {
+            display: block;
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .score-item .value {
+            display: block;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .game-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 850px;
+            height: 750px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(8, 90px);
+            grid-template-rows: repeat(6, 90px);
+            gap: 10px;
+            margin-bottom: 30px;
+            width: 740px;
+            height: 560px;
+        }
+
+        .cell {
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 3px;
+            padding: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, border-color 0.3s ease;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            width: 90px;
+            height: 90px;
+            box-sizing: border-box;
+        }
+
+        .cell:hover {
+            background: linear-gradient(145deg, #e8e8e8, #f8f8f8);
+        }
+
+        .cell.selected {
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            border-color: #ff6b6b;
+        }
+
+        .cell.correct {
+            animation: correctAnim 0.5s ease;
+            background: linear-gradient(145deg, #51cf66, #8ce99a);
+        }
+
+        .cell.wrong {
+            animation: wrongAnim 0.5s ease;
+        }
+
+        .cell.eliminating {
+            animation: eliminate 0.6s ease forwards;
+        }
+
+        .char {
+            font-size: 22px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .blank {
+            border: 2px dashed #999;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            min-height: 60px;
+            align-items: center;
+        }
+
+        .option {
+            background: linear-gradient(145deg, #4c6ef5, #748ffc);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            background: linear-gradient(145deg, #5c7cfa, #91a7ff);
+        }
+
+        .option:active {
+            transform: translateY(0);
+        }
+
+        .hint {
+            text-align: center;
+            color: #666;
+            font-size: 16px;
+            margin-top: 15px;
+            height: 24px;
+            line-height: 24px;
+        }
+
+        @keyframes correctAnim {
+            0%, 100% { 
+                background: linear-gradient(145deg, #51cf66, #8ce99a);
+            }
+            50% { 
+                background: linear-gradient(145deg, #69db7c, #a3e9b4);
+            }
+        }
+
+        @keyframes wrongAnim {
+            0%, 100% { 
+                border-color: #ddd;
+            }
+            25%, 75% { 
+                border-color: #ff6b6b;
+            }
+        }
+
+        @keyframes eliminate {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.3) rotate(180deg);
+                opacity: 0.5;
+            }
+            100% { 
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .btn-restart {
+            display: inline-block;
+            margin: 20px 10px 0;
+            padding: 12px 40px;
+            font-size: 18px;
+            background: linear-gradient(145deg, #ff6b6b, #ff8787);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-home {
+            display: inline-block;
+            margin: 20px 10px 0;
+            padding: 12px 40px;
+            font-size: 18px;
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .button-group {
+            text-align: center;
+        }
+        
+        @media (max-width: 1000px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .left-panel {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .score-board {
+                flex-direction: row;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .game-container {
+                width: 100%;
+                max-width: 800px;
+                height: auto;
+            }
+            
+            .grid {
+                width: 100%;
+                height: auto;
+                grid-template-columns: repeat(8, 1fr);
+                grid-template-rows: repeat(6, 1fr);
+            }
+            
+            .cell {
+                width: 100%;
+                height: 100%;
+                aspect-ratio: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="header">
+                <h1>🎮 成语填字消消乐</h1>
+            </div>
+            
+            <div class="score-board">
+                <div class="score-item">
+                    <span class="label">🎯 得分</span>
+                    <span class="value" id="score">0</span>
+                </div>
+                <div class="score-item">
+                    <span class="label">✨ 消除</span>
+                    <span class="value" id="eliminated">0</span>
+                </div>
+                <div class="score-item">
+                    <span class="label">📊 正确率</span>
+                    <span class="value" id="accuracy">0%</span>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-restart" onclick="restartGame()" style="display: block; margin: 0 auto 10px;">🔄 重新开始</button>
+                <a href="index.html" class="btn-home" style="display: block; margin: 0 auto;">🏠 返回首页</a>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <div class="grid" id="grid"></div>
+            <div class="options-container" id="options"></div>
+            <div class="hint" id="hint">点击一个成语，然后选择正确的字来填空</div>
+        </div>
+    </div>
+
+    <script>
+        // 1000个常见成语词库
+        const idioms = [
+            "一帆风顺", "一鸣惊人", "一诺千金", "一马当先", "一目了然",
+            "一心一意", "一丝不苟", "一言九鼎", "一见钟情", "一举两得",
+            "七上八下", "七嘴八舌", "万众一心", "万紫千红", "三心二意",
+            "三思而行", "三长两短", "不耻下问", "不可思议", "不言而喻",
+            "不约而同", "不计其数", "不知所措", "东张西望", "两全其美",
+            "中流砥柱", "丰功伟绩", "举世闻名", "举一反三", "乐极生悲",
+            "九牛一毛", "九死一生", "云开见日", "五光十色", "五花八门",
+            "井井有条", "亡羊补牢", "交头接耳", "人山人海", "人才济济",
+            "人声鼎沸", "人心不古", "人杰地灵", "人来人往", "人浮于事",
+            "人满为患", "人财两空", "人逢喜事", "今非昔比", "仗义执言",
+            "他乡遇故", "付之一笑", "仙风道骨", "代代相传", "以德报怨",
+            "以身作则", "任劳任怨", "众口一词", "众志成城", "优柔寡断",
+            "似曾相识", "似是而非", "但求无愧", "低三下四", "余音绕梁",
+            "作威作福", "依依不舍", "侃侃而谈", "侥幸心理", "信口开河",
+            "信誓旦旦", "俯首称臣", "倒背如流", "偃旗息鼓", "偷梁换柱",
+            "光明磊落", "光阴似箭", "兢兢业业", "入木三分", "全神贯注",
+            "八仙过海", "公正廉明", "兴高采烈", "再接再厉", "冰清玉洁",
+            "冷眼旁观", "出人头地", "出类拔萃", "分道扬镳", "刻不容缓",
+            "别出心裁", "别具一格", "刮目相看", "刺刺不休", "前仆后继",
+            "前功尽弃", "前所未有", "功德无量", "助人为乐", "劳苦功高",
+            "势不两立", "勇往直前", "勤学苦练", "千变万化", "千军万马",
+            "千奇百怪", "千姿百态", "千载难逢", "千辛万苦", "千钧一发",
+            "半信半疑", "半途而废", "南辕北辙", "博大精深", "博学多才",
+            "卧薪尝胆", "危在旦夕", "历历在目", "厉兵秣马", "受益匪浅",
+            "古色古香", "另眼相看", "叶落归根", "同仇敌忾", "同心协力",
+            "名不虚传", "名列前茅", "名副其实", "名扬四海", "后起之秀",
+            "后继有人", "吐故纳新", "向隅而泣", "吞吞吐吐", "含沙射影",
+            "听天由命", "呕心沥血", "周而复始", "呼风唤雨", "和衷共济",
+            "咄咄逼人", "哄堂大笑", "唇亡齿寒", "喜出望外", "喜形于色",
+            "喜新厌旧", "喜气洋洋", "嘘寒问暖", "因势利导", "因材施教",
+            "回味无穷", "回心转意", "固执己见", "国泰民安", "图穷匕见",
+            "坐井观天", "坐立不安", "垂头丧气", "堂堂正正", "塞翁失马",
+            "墨守成规", "声东击西", "处心积虑", "夜以继日", "大公无私",
+            "大同小异", "大器晚成", "大失所望", "大庭广众", "大彻大悟",
+            "大张旗鼓", "大惊小怪", "大显身手", "大材小用", "大步流星",
+            "大海捞针", "大相径庭", "大义灭亲", "大言不惭", "大跌眼镜",
+            "大雨倾盆", "天伦之乐", "天各一方", "天壤之别", "天外有天",
+            "天寒地冻", "天怒人怨", "天昏地暗", "天涯海角", "天衣无缝",
+            "天长地久", "天马行空", "夫唱妇随", "奋不顾身", "奋发图强",
+            "奇珍异宝", "奄奄一息", "好高骛远", "如出一辙", "如履薄冰",
+            "如梦初醒", "如虎添翼", "如鱼得水", "妙不可言", "妙手回春",
+            "妙笔生花", "妙语连珠", "姗姗来迟", "娓娓动听", "孜孜不倦",
+            "守口如瓶", "守株待兔", "安居乐业", "安然无恙", "安贫乐道",
+            "完璧归赵", "宽宏大量", "宾至如归", "家喻户晓", "寸步难行",
+            "对牛弹琴", "对症下药", "寻根究底", "小心翼翼", "小题大做",
+            "尺有所短", "屈指可数", "山清水秀", "山穷水尽", "川流不息",
+            "左右逢源", "巧夺天工", "巧妙绝伦", "巧舌如簧", "差强人意",
+            "己所不欲", "平分秋色", "平心静气", "平易近人", "年富力强",
+            "幸灾乐祸", "应接不暇", "庞然大物", "废寝忘食", "开天辟地",
+            "开宗明义", "开诚布公", "异口同声", "弃旧图新", "弄巧成拙",
+            "引人入胜", "引人注目", "引经据典", "张冠李戴", "张灯结彩",
+            "归心似箭", "当务之急", "彬彬有礼", "彻头彻尾", "心口如一",
+            "心安理得", "心旷神怡", "心灰意冷", "心照不宣", "心猿意马",
+            "心甘情愿", "心血来潮", "心驰神往", "志同道合", "忐忑不安",
+            "念念不忘", "怒发冲冠", "怒气冲冲", "怦然心动", "恋恋不舍",
+            "恍然大悟", "恩将仇报", "悔过自新", "情不自禁", "惊天动地",
+            "惊弓之鸟", "惊心动魄", "惊慌失措", "惩恶扬善", "意味深长",
+            "意气风发", "意气用事", "愁眉苦脸", "感人肺腑", "感激涕零",
+            "慢条斯理", "成千上万", "成群结队", "成竹在胸", "戒骄戒躁",
+            "手忙脚乱", "手舞足蹈", "才华横溢", "打草惊蛇", "扬长避短",
+            "扬眉吐气", "扬长而去", "抑扬顿挫", "披荆斩棘", "披星戴月",
+            "抛砖引玉", "招摇过市", "拔苗助长", "拾金不昧", "持之以恒",
+            "指手画脚", "指鹿为马", "挑拨离间", "振奋人心", "捧腹大笑",
+            "排山倒海", "接二连三", "推心置腹", "掩耳盗铃", "故弄玄虚",
+            "敝帚自珍", "数不胜数", "斗志昂扬", "断章取义", "新陈代谢",
+            "方兴未艾", "无与伦比", "无可奈何", "无地自容", "无孔不入",
+            "无微不至", "无所不为", "无所适从", "无精打采", "无缘无故",
+            "无言以对", "无足轻重", "无边无际", "日复一日", "日新月异",
+            "日理万机", "旧貌新颜", "明察秋毫", "明辨是非", "易如反掌",
+            "星罗棋布", "春光明媚", "春华秋实", "春暖花开", "春风化雨",
+            "昙花一现", "晴天霹雳", "暗箭伤人", "暴跳如雷", "曲高和寡",
+            "曲折离奇", "望尘莫及", "望眼欲穿", "朝三暮四", "朝气蓬勃",
+            "木已成舟", "未雨绸缪", "本末倒置", "杞人忧天", "杯弓蛇影",
+            "杯水车薪", "枯木逢春", "柳暗花明", "栩栩如生", "桀骜不驯",
+            "欢天喜地", "欣欣向荣", "欺软怕硬", "欺骗陷害", "正气凛然",
+            "正襟危坐", "步履蹒跚", "步步为营", "死灰复燃", "死里逃生",
+            "殊途同归", "毛遂自荐", "毫不犹豫", "毫不气馁", "毫无疑问",
+            "民不聊生", "气喘吁吁", "气宇轩昂", "气急败坏", "气象万千",
+            "汗马功劳", "江郎才尽", "汹涌澎湃", "沉默寡言", "沉鱼落雁",
+            "油嘴滑舌", "泰然自若", "洁身自好", "津津有味", "流光溢彩",
+            "流离失所", "流连忘返", "浓眉大眼", "海市蜃楼", "海枯石烂",
+            "消愁解闷", "涕泗横流", "深入浅出", "深思熟虑", "深恶痛绝",
+            "混为一谈", "清正廉洁", "满腔热忱", "满载而归", "滔滔不绝",
+            "漠不关心", "潜移默化", "火烧眉毛", "火树银花", "灯红酒绿",
+            "灰心丧气", "炉火纯青", "点石成金", "无价之宝", "热火朝天",
+            "焕然一新", "煞费苦心", "熙熙攘攘", "熟视无睹", "燃眉之急",
+            "爱不释手", "爱屋及乌", "牛刀小试", "牛头马面", "牢不可破",
+            "狐假虎威", "狗仗人势", "狗急跳墙", "狼吞虎咽", "狼狈为奸",
+            "猴年马月", "玲珑剔透", "班门弄斧", "珠光宝气", "瓜熟蒂落",
+            "画蛇添足", "画龙点睛", "疑神疑鬼", "疲惫不堪", "登峰造极",
+            "百发百中", "百感交集", "百花齐放", "皆大欢喜", "盖世无双",
+            "盛气凌人", "目中无人", "目不暇接", "目不识丁", "目光短浅",
+            "目瞪口呆", "盲人摸象", "直截了当", "相依为命", "相得益彰",
+            "相敬如宾", "眉开眼笑", "眉清目秀", "眉飞色舞", "真凭实据",
+            "真心实意", "眼明手快", "眼花缭乱", "瞠目结舌", "知己知彼",
+            "知恩图报", "知难而退", "矢志不渝", "破釜沉舟", "破镜重圆",
+            "碌碌无为", "磨刀霍霍", "礼尚往来", "神出鬼没", "神通广大",
+            "祸从口出", "福如东海", "离心离德", "秀外慧中", "秋高气爽",
+            "科班出身", "移花接木", "稳如泰山", "空前绝后", "空穴来风",
+            "突飞猛进", "笑容可掬", "笑里藏刀", "第一无二", "筋疲力尽",
+            "粉身碎骨", "精兵简政", "精打细算", "精疲力竭", "精益求精",
+            "精神抖擞", "精神焕发", "精雕细刻", "纸上谈兵", "纸醉金迷",
+            "红红火火", "纷至沓来", "络绎不绝", "绞尽脑汁", "绘声绘色",
+            "老气横秋", "老生常谈", "老练持重", "耀武扬威", "耳目一新",
+            "耳濡目染", "耳熟能详", "耳闻目睹", "聚精会神", "肆无忌惮",
+            "胆小如鼠", "胆战心惊", "能言善辩", "脍炙人口", "脚踏实地",
+            "腰缠万贯", "自不量力", "自告奋勇", "自吹自擂", "自强不息",
+            "自得其乐", "自怨自艾", "自暴自弃", "自相矛盾", "自言自语",
+            "舍己为人", "舍生取义", "舍近求远", "苦口婆心", "苦尽甘来",
+            "苦心经营", "苦思冥想", "苦海无边", "英勇无畏", "茅塞顿开",
+            "荒诞不经", "荒谬绝伦", "莫名其妙", "落井下石", "落花流水",
+            "落荒而逃", "落落大方", "蒸蒸日上", "藏龙卧虎", "虎头蛇尾",
+            "虎背熊腰", "虚张声势", "虚怀若谷", "虚情假意", "螳臂当车",
+            "血口喷人", "血流成河", "血肉相连", "行云流水", "行尸走肉",
+            "衣冠楚楚", "衣食无忧", "表里不一", "袖手旁观", "视而不见",
+            "触景生情", "言之凿凿", "言行不一", "诚心诚意", "语重心长",
+            "说一不二", "说三道四", "调虎离山", "谈笑风生", "谈虎色变",
+            "豁然开朗", "负荆请罪", "贪生怕死", "贪得无厌", "贫嘴薄舌",
+            "赏心悦目", "赤手空拳", "赤胆忠心", "走投无路", "走马观花",
+            "起死回生", "超凡脱俗", "跃跃欲试", "踌躇满志", "身临其境",
+            "身先士卒", "身体力行", "身强力壮", "身心交瘁", "身败名裂",
+            "躁动不安", "转危为安", "转悲为喜", "转眼之间", "轻举妄动",
+            "轻而易举", "轻车熟路", "辗转反侧", "迎刃而解", "近在咫尺",
+            "迫不及待", "述而不作", "追根究底", "退避三舍", "逃之夭夭",
+            "逍遥法外", "通情达理", "造谣生事", "逢凶化吉", "遍体鳞伤",
+            "道听途说", "遥遥相对", "遥遥领先", "避重就轻", "郑重其事",
+            "酒囊饭袋", "醉生梦死", "重于泰山", "金玉良言", "金碧辉煌",
+            "金蝉脱壳", "铁石心肠", "锦上添花", "锲而不舍", "长治久安",
+            "门庭若市", "闪烁其词", "闭门造车", "闻鸡起舞", "阳奉阴违",
+            "防患未然", "阿谀奉承", "降龙伏虎", "陈词滥调", "随心所欲",
+            "随波逐流", "隔岸观火", "雄心壮志", "雅俗共赏", "雨后春笋",
+            "雷厉风行", "震耳欲聋", "青出于蓝", "青梅竹马", "青红皂白",
+            "面不改色", "面如土色", "面目全非", "鞠躬尽瘁", "顶天立地",
+            "顺其自然", "顺水推舟", "顺理成章", "顾此失彼", "风和日丽",
+            "风平浪静", "风度翩翩", "风调雨顺", "风雨同舟", "飞扬跋扈",
+            "饮水思源", "养尊处优", "首屈一指", "马到成功", "马马虎虎",
+            "驾轻就熟", "骄兵必败", "骑虎难下", "骗人买直", "高不可攀",
+            "高人一等", "高山流水", "高瞻远瞩", "高谈阔论", "鬼斧神工",
+            "鱼目混珠", "鸟语花香", "鸡犬不宁", "鸡飞狗跳", "鸦雀无声",
+            "黯然失色", "鼠目寸光", "齐头并进", "龙凤呈祥", "龙飞凤舞",
+            // 新增1000个常用成语
+            "一蹴而就", "一劳永逸", "一波三折", "一往无前", "一窍不通",
+            "一鼓作气", "一箭双雕", "一毛不拔", "一网打尽", "一知半解",
+            "一字千金", "一败涂地", "一文不值", "一针见血", "一落千丈",
+            "一扫而光", "一筹莫展", "一暴十寒", "一气呵成", "一叶知秋",
+            "七零八落", "万马奔腾", "万古长青", "万事如意", "万无一失",
+            "三番五次", "三顾茅庐", "三足鼎立", "三生有幸", "三令五申",
+            "上行下效", "下落不明", "不可一世", "不甘示弱", "不寒而栗",
+            "不屈不挠", "不拘一格", "不择手段", "不修边幅", "不速之客",
+            "不胫而走", "不翼而飞", "不了了之", "不伦不类", "不白之冤",
+            "不刊之论", "不卑不亢", "不即不离", "不厌其烦", "不求甚解",
+            "不遗余力", "不痛不痒", "不谋而合", "不负众望", "不共戴天",
+            "与世无争", "与日俱增", "世外桃源", "丑态百出", "东山再起",
+            "东施效颦", "东窗事发", "两败俱伤", "两面三刀", "严阵以待",
+            "丧心病狂", "个中滋味", "中庸之道", "临危不惧", "临阵磨枪",
+            "为所欲为", "为虎作伥", "举步维艰", "举足轻重", "乘风破浪",
+            "乘虚而入", "乘人之危", "九霄云外", "习以为常", "书声琅琅",
+            "事半功倍", "事与愿违", "事在人为", "二话不说", "亘古未有",
+            "云消雾散", "五体投地", "五颜六色", "五湖四海", "井底之蛙",
+            "亭亭玉立", "人云亦云", "人心惶惶", "人情世故", "人面兽心",
+            "人老珠黄", "人琴俱亡", "人尽其才", "人各有志", "人定胜天",
+            "人心向背", "人迹罕至", "人间天堂", "什么风景", "仁至义尽",
+            "今朝有酒", "从容不迫", "从长计议", "从善如流", "仰人鼻息",
+            "令人发指", "令行禁止", "以卵击石", "以逸待劳", "以貌取人",
+            "以讹传讹", "以儆效尤", "以偏概全", "以退为进", "以防万一",
+            "任重道远", "价值连城", "众叛亲离", "众矢之的", "众望所归",
+            "众所周知", "会心一笑", "伤风败俗", "伯仲之间", "低声下气",
+            "体无完肤", "余味无穷", "佳人才子", "侃侃而言", "侧目而视",
+            "俯拾即是", "俯仰之间", "保家卫国", "信以为真", "信手拈来",
+            "信口雌黄", "修身养性", "倾家荡产", "倾巢而出", "假公济私",
+            "偷天换日", "偷工减料", "做贼心虚", "停滞不前", "傲然挺立",
+            "催人泪下", "儿女情长", "先入为主", "先声夺人", "先斩后奏",
+            "先礼后兵", "光怪陆离", "光彩夺目", "免费午餐", "入乡随俗",
+            "入情入理", "全力以赴", "全军覆没", "全心全意", "全力而为",
+            "八方呼应", "八面玲珑", "八斗之才", "公报私仇", "公私分明",
+            "公而忘私", "兵不厌诈", "兵荒马乱", "兵临城下", "其貌不扬",
+            "再三考虑", "再衰三竭", "冠冕堂皇", "冤家路窄", "冰天雪地",
+            "冷嘲热讽", "冷若冰霜", "凄风苦雨", "凌云壮志", "凤毛麟角",
+            "凶多吉少", "凶神恶煞", "凿壁偷光", "刀光剑影", "刀山火海",
+            "分秒必争", "分崩离析", "分庭抗礼", "切肤之痛", "切中要害",
+            "刑讯逼供", "列祖列宗", "初出茅庐", "初生牛犊", "利欲熏心",
+            "前车之鉴", "前赴后继", "前因后果", "前呼后拥", "剑拔弩张",
+            "剑走偏锋", "劫后余生", "势如破竹", "势在必行", "势均力敌",
+            "勃然大怒", "勇猛精进", "勇冠三军", "包罗万象", "化险为夷",
+            "化干戈为", "化为乌有", "化整为零", "北辕适楚", "匠心独运",
+            "十全十美", "十拿九稳", "十年寒窗", "十恶不赦", "十指连心",
+            "千方百计", "千头万绪", "千言万语", "千丝万缕", "千疮百孔",
+            "千篇一律", "千锤百炼", "千虑一得", "千真万确", "千钧重负",
+            "升官发财", "午夜梦回", "半途而返", "半推半就", "半斤八两",
+            "华而不实", "协力同心", "卓尔不群", "卑躬屈膝", "卧虎藏龙",
+            "卷土重来", "厚此薄彼", "厚颜无耻", "厚积薄发", "厉行节约",
+            "压倒一切", "原形毕露", "厉声呵斥", "去伪存真", "去粗取精",
+            "双管齐下", "反客为主", "反复无常", "反戈一击", "反璞归真",
+            "反目成仇", "取长补短", "取而代之", "变本加厉", "变化无常",
+            "变幻莫测", "变废为宝", "口干舌燥", "口是心非", "口若悬河",
+            "口蜜腹剑", "口诛笔伐", "古往今来", "古为今用", "古道热肠",
+            "叫苦不迭", "叫苦连天", "可歌可泣", "可乘之机", "可见一斑",
+            "可想而知", "司空见惯", "各抒己见", "各行其是", "合二为一",
+            "合情合理", "吉祥如意", "同床异梦", "同流合污", "同甘共苦",
+            "名正言顺", "名门望族", "名存实亡", "名落孙山", "向火乞儿",
+            "吞云吐雾", "吹毛求疵", "呆若木鸡", "周公吐哺", "呼之欲出",
+            "命中注定", "和风细雨", "和睦相处", "和颜悦色", "咬文嚼字",
+            "咬牙切齿", "哀兵必胜", "哀鸿遍野", "品学兼优", "哗众取宠",
+            "唇枪舌剑", "唾手可得", "善始善终", "善罢甘休", "善男信女",
+            "喋喋不休", "喜笑颜开", "喜闻乐见", "喜上眉梢", "嘉言懿行",
+            "嗤之以鼻", "器宇不凡", "噤若寒蝉", "四分五裂", "四海为家",
+            "四面楚歌", "四平八稳", "四通八达", "四面八方", "回光返照",
+            "回肠荡气", "因地制宜", "因小失大", "因祸得福", "因循守旧",
+            "团结一致", "固若金汤", "国色天香", "图谋不轨", "圆满成功",
+            "土崩瓦解", "在所不辞", "在劫难逃", "地大物博", "地广人稀",
+            "地老天荒", "坐享其成", "坐怀不乱", "坐卧不安", "坐收渔利",
+            "坚强不屈", "坚忍不拔", "坚持不懈", "坚贞不屈", "垂涎三尺",
+            "型男靓女", "埋头苦干", "城府很深", "执迷不悟", "基业长青",
+            "堆金积玉", "塞外江南", "墨迹未干", "声名狼藉", "声嘶力竭",
+            "声色俱厉", "声泪俱下", "声势浩大", "壮志未酬", "处之泰然",
+            "备受煎熬", "复杂多变", "夏虫语冰", "多愁善感", "多才多艺",
+            "多谋善断", "多行不义", "多事之秋", "夜不闭户", "夜深人静",
+            "夜郎自大", "夜阑人静", "大功告成", "大吉大利", "大名鼎鼎",
+            "大快人心", "大喜过望", "大智若愚", "大有可为", "大权在握",
+            "大刀阔斧", "大势所趋", "大吃一惊", "大兴土木", "大惊失色",
+            "大难不死", "大放厥词", "大发雷霆", "大好河山", "大得人心",
+            "天之骄子", "天下为公", "天下太平", "天下无双", "天下第一",
+            "天作之合", "天南地北", "天崩地裂", "天差地别", "天方夜谭",
+            "天时地利", "天朗气清", "天理难容", "天生丽质", "天网恢恢",
+            "天翻地覆", "天赋异禀", "天道酬勤", "天高云淡", "天花乱坠",
+            "太平盛世", "失之交臂", "失魂落魄", "失道寡助", "夸夸其谈",
+            "夸大其词", "夺眶而出", "奇货可居", "奇形怪状", "奇思妙想",
+            "奇耻大辱", "奇装异服", "奉公守法", "奋起直追", "女娲补天",
+            "如临大敾", "如坐针毡", "如火如荼", "如愿以偿", "如日中天",
+            "如泣如诉", "如痴如醉", "如雷贯耳", "如胶似漆", "如芒在背",
+            "妄自菲薄", "妄自尊大", "妙趣横生", "妙语如珠", "姹紫嫣红",
+            "威风凛凛", "娇生惯养", "婀娜多姿", "孔武有力", "字正腔圆",
+            "存亡绝续", "孤军奋战", "孤掌难鸣", "孤芳自赏", "孤注一掷",
+            "学以致用", "学富五车", "学无止境", "守正不阿", "守望相助",
+            "安分守己", "安土重迁", "安营扎寨", "安身立命", "安邦定国",
+            "宏图大志", "官官相护", "官逼民反", "定于一尊", "宠辱不惊",
+            "宝刀不老", "实事求是", "实至名归", "审时度势", "寂然无声",
+            "寒窗苦读", "富丽堂皇", "富国强兵", "富贵荣华", "寝食难安",
+            "对答如流", "对簿公堂", "对酒当歌", "寻死觅活", "寻欢作乐",
+            "寻章摘句", "导火索线", "小巧玲珑", "小家碧玉", "小惩大诫",
+            "小试牛刀", "少年老成", "尸位素餐", "尺短寸长", "居安思危",
+            "居功自傲", "居高临下", "屡试不爽", "屡见不鲜", "屡教不改",
+            "层出不穷", "层峦叠嶂", "屹立不倒", "山河破碎", "山河壮丽",
+            "山盟海誓", "山高水长", "崇山峻岭", "崭露头角", "川流不息",
+            "巧取豪夺", "巧言令色", "差之毫厘", "己所不欲", "师出有名",
+            "师心自用", "带罪立功", "常备不懈", "平步青云", "平白无故",
+            "平起平坐", "平铺直叙", "年复一年", "年迈体衰", "年轻力壮",
+            "幸不辱命", "幻想破灭", "幽默风趣", "广开言路", "广结善缘",
+            "庄严肃穆", "庐山真面", "度日如年", "座无虚席", "廉洁奉公",
+            "开卷有益", "开国元勋", "开怀畅饮", "开源节流", "开门见山",
+            "弃暗投明", "弃若敝屣", "弄假成真", "弄虚作假", "弊多利少",
+            "式微式微", "弦外之音", "弱不禁风", "弹尽粮绝", "强人所难",
+            "强词夺理", "强颜欢笑", "归根结底", "当仁不让", "当头棒喝",
+            "当机立断", "彩衣娱亲", "影影绰绰", "彷徨不定", "往事如烟",
+            "待人接物", "待价而沽", "徇私枉法", "徒劳无功", "得不偿失",
+            "得天独厚", "得寸进尺", "得心应手", "得意忘形", "得意洋洋",
+            "得过且过", "得陇望蜀", "循循善诱", "循序渐进", "微不足道",
+            "微言大义", "德才兼备", "德高望重", "心不在焉", "心中有数",
+            "心如刀割", "心如止水", "心安理得", "心平气和", "心广体胖",
+            "心急如焚", "心悦诚服", "心惊肉跳", "心慈手软", "心有余悸",
+            "心有灵犀", "心神不定", "心花怒放", "心领神会", "心驰神往",
+            "忍气吞声", "忍辱负重", "忍俊不禁", "志在四方", "忘乎所以",
+            "忘恩负义", "忙里偷闲", "快刀斩乱", "快人快语", "快马加鞭",
+            "怀才不遇", "怀恨在心", "怀璧其罪", "怒不可遏", "怒火中烧",
+            "怒目而视", "思前想后", "急功近利", "急流勇退", "急中生智",
+            "怨声载道", "怨天尤人", "性命攸关", "总而言之", "恃强凌弱",
+            "恋恋不舍", "恍如隔世", "恐慌不安", "恒河沙数", "恬不知耻",
+            "恰到好处", "恰如其分", "悬崖勒马", "悬梁刺股", "悬而未决",
+            "悲喜交集", "悲欢离合", "悲痛欲绝", "悲观失望", "悲天悯人",
+            "情同手足", "情深似海", "情真意切", "情窦初开", "惊涛骇浪",
+            "惊鸿一瞥", "惶恐不安", "惨不忍睹", "惨淡经营", "惨无人道",
+            "惩前毖后", "想入非非", "意兴阑珊", "意在言外", "意料之中",
+            "意气相投", "愚不可及", "愚公移山", "愚昧无知", "感同身受",
+            "感恩戴德", "慈眉善目", "慷慨激昂", "慷慨解囊", "憨态可掬",
+            "懒懒散散", "懵懵懂懂", "戎马倥偬", "成事不足", "成人之美",
+            "成家立业", "成年累月", "成王败寇", "成竹于胸", "成败得失",
+            "成龙配套", "我行我素", "戒备森严", "截然不同", "战无不胜",
+            "战战兢兢", "战天斗地", "戴罪立功", "房谋杜断", "所向披靡",
+            "所向无敌", "所见所闻", "扁担没扎", "手不释卷", "手到擒来",
+            "手无寸铁", "手足无措", "手足情深", "才子佳人", "才疏学浅",
+            "才高八斗", "打抱不平", "打破沙锅", "打成一片", "打退堂鼓",
+            "扬名立万", "扬汤止沸", "扬眉吐气", "扭转乾坤", "扶老携幼",
+            "扶摇直上", "批郤导窾", "找茬挑刺", "承上启下", "承前启后",
+            "抓耳挠腮", "投井下石", "投其所好", "投桃报李", "投机取巧",
+            "投笔从戎", "投鼠忌器", "抱头鼠窜", "抱残守缺", "抱薪救火",
+            "抵足而眠", "拔刀相助", "拔地而起", "拔山盖世", "拨乱反正",
+            "拨云见日", "择善而从", "拭目以待", "拳打脚踢", "拾人牙慧",
+            "拾遗补缺", "持之以恒", "持续不断", "挂一漏万", "挑三拣四",
+            "挑肥拣瘦", "振振有词", "振臂一呼", "挺身而出", "捕风捉影",
+            "捷足先登", "捶胸顿足", "掌上明珠", "排忧解难", "排除万难",
+            "探囊取物", "接踵而至", "接连不断", "推三阻四", "推波助澜",
+            "掩人耳目", "措手不及", "揠苗助长", "描龙绣凤", "提心吊胆",
+            "提纲挈领", "插科打诨", "揭竿而起", "摇摆不定", "摇摇欲坠",
+            "摩肩接踵", "摩拳擦掌", "撒手人寰", "撕心裂肺", "撞钟吃饭",
+            "擢发难数", "攀龙附凤", "支离破碎", "收买人心", "改头换面",
+            "改过自新", "改邪归正", "放任自流", "放浪形骸", "放虎归山",
+            "政通人和", "故伎重演", "故作高深", "故态复萌", "故步自封",
+            "敌众我寡", "敬而远之", "敬谢不敏", "数典忘祖", "数见不鲜",
+            "整装待发", "文不加点", "文以载道", "文君新寡", "文质彬彬",
+            "文过饰非", "斗转星移", "料事如神", "斩钉截铁", "斩草除根",
+            "断壁残垣", "新婚燕尔", "方寸之地", "旁敲侧击", "旁若无人",
+            "无事生非", "无依无靠", "无价之宝", "无奇不有", "无妄之灾",
+            "无影无踪", "无恶不作", "无忧无虑", "无懈可击", "无拘无束",
+            "无济于事", "无理取闹", "无病呻吟", "无穷无尽", "无稽之谈",
+            "无中生有", "无声无息", "无可厚非", "无可挑剔", "无动于衷",
+            "日上三竿", "日以继夜", "日积月累", "日薄西山", "日落西山",
+            "旦夕之间", "早出晚归", "旭日东升", "时不我待", "时光荏苒",
+            "时过境迁", "时来运转", "时隐时现", "时运不济", "明争暗斗",
+            "明明白白", "明火执仗", "明珠暗投", "明知故犯", "明眸皓齿",
+            "明目张胆", "明镜高悬", "易地而处", "昏天黑地", "昏庸无道",
+            "春去秋来", "春意盎然", "春秋鼎盛", "春色满园", "春风得意",
+            "昨日黄花", "是非曲直", "是非分明", "显而易见", "晚节不保",
+            "晨钟暮鼓", "普天同庆", "景色宜人", "智勇双全", "暗送秋波",
+            "暗藏玄机", "暮气沉沉", "暮鼓晨钟", "曾几何时", "最后通牒",
+            "有口皆碑", "有名无实", "有备无患", "有始有终", "有志竟成",
+            "有恃无恐", "有条不紊", "有机可乘", "有板有眼", "有的放矢",
+            "有眼不识", "有眼无珠", "有识之士", "有问必答", "朋比为奸",
+            "朝令夕改", "朝思暮想", "朝秦暮楚", "朝不保夕", "期期艾艾",
+            "木人石心", "未卜先知", "未尝不可", "末路穷途", "本性难移",
+            "朱门酒肉", "机不可失", "机关算尽", "机智灵活", "杀一儆百",
+            "杀人如麻", "杀鸡取卵", "杀鸡儆猴", "权倾一时", "权宜之计",
+            "杨柳依依", "杳无音信", "束手就擒", "束手无策", "束缚手脚",
+            "条分缕析", "来势汹汹", "来日方长", "来者不善", "来者不拒",
+            "来龙去脉", "杯盘狼藉", "东倒西歪", "松柏后凋", "板上钉钉",
+            "枕戈待旦", "林林总总", "果不其然", "枯燥无味", "柔情似水",
+            "标新立异", "栉风沐雨", "根深蒂固", "格格不入", "格物致知",
+            "桃李满门", "桃李天下", "桃红柳绿", "梁上君子", "棋逢对手",
+            "森严壁垒", "椎心泣血", "楚楚动人", "楚楚可怜", "楚材晋用"
+        ];
+
+        let grid = [];
+        let selectedCell = null;
+        let score = 0;
+        let eliminated = 0;
+        let currentOptions = [];
+        let totalAttempts = 0;
+        let correctAttempts = 0;
+
+        // 初始化游戏
+        function initGame() {
+            grid = [];
+            score = 0;
+            eliminated = 0;
+            totalAttempts = 0;
+            correctAttempts = 0;
+            updateScore();
+            
+            // 从词库中随机选择 6*8=48 个成语
+            const selectedIdioms = [];
+            const usedIndices = new Set();
+            
+            while (selectedIdioms.length < 48) {
+                const index = Math.floor(Math.random() * idioms.length);
+                if (!usedIndices.has(index)) {
+                    usedIndices.add(index);
+                    selectedIdioms.push(idioms[index]);
+                }
+            }
+            
+            // 创建 6x8 网格
+            for (let i = 0; i < 48; i++) {
+                const idiom = selectedIdioms[i];
+                const blankIndex = Math.floor(Math.random() * 4); // 随机选择一个位置留空
+                
+                grid.push({
+                    idiom: idiom,
+                    blankIndex: blankIndex,
+                    correctChar: idiom[blankIndex],
+                    row: Math.floor(i / 8),
+                    col: i % 8,
+                    eliminated: false
+                });
+            }
+            
+            renderGrid();
+        }
+
+        // 渲染网格
+        function renderGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            
+            grid.forEach((cell, index) => {
+                if (cell.eliminated) {
+                    const emptyDiv = document.createElement('div');
+                    gridElement.appendChild(emptyDiv);
+                    return;
+                }
+                
+                const cellDiv = document.createElement('div');
+                cellDiv.className = 'cell';
+                cellDiv.dataset.index = index; // 添加数据属性记录真实索引
+                cellDiv.onclick = () => selectCell(index);
+                
+                for (let i = 0; i < 4; i++) {
+                    if (i === cell.blankIndex) {
+                        const blank = document.createElement('div');
+                        blank.className = 'blank';
+                        blank.textContent = '?';
+                        cellDiv.appendChild(blank);
+                    } else {
+                        const char = document.createElement('div');
+                        char.className = 'char';
+                        char.textContent = cell.idiom[i];
+                        cellDiv.appendChild(char);
+                    }
+                }
+                
+                gridElement.appendChild(cellDiv);
+            });
+        }
+
+        // 选择一个格子
+        function selectCell(index) {
+            if (grid[index].eliminated) return;
+            
+            selectedCell = index;
+            
+            // 更新选中状态
+            document.querySelectorAll('.cell').forEach((el) => {
+                const elIndex = parseInt(el.dataset.index);
+                if (elIndex === index) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+            
+            // 生成选项
+            generateOptions(grid[index]);
+        }
+
+        // 生成三个选项
+        function generateOptions(cell) {
+            const correctChar = cell.correctChar;
+            currentOptions = [correctChar];
+            
+            // 生成两个错误选项（从其他成语中随机选择）
+            const wrongChars = new Set();
+            while (wrongChars.size < 2) {
+                const randomIdiom = idioms[Math.floor(Math.random() * idioms.length)];
+                const randomChar = randomIdiom[Math.floor(Math.random() * 4)];
+                if (randomChar !== correctChar && !wrongChars.has(randomChar)) {
+                    wrongChars.add(randomChar);
+                }
+            }
+            
+            currentOptions.push(...Array.from(wrongChars));
+            
+            // 打乱选项顺序
+            currentOptions.sort(() => Math.random() - 0.5);
+            
+            // 渲染选项
+            const optionsElement = document.getElementById('options');
+            optionsElement.innerHTML = '';
+            
+            currentOptions.forEach(char => {
+                const button = document.createElement('button');
+                button.className = 'option';
+                button.textContent = char;
+                button.onclick = () => checkAnswer(char);
+                optionsElement.appendChild(button);
+            });
+            
+            document.getElementById('hint').textContent = `选择正确的字来完成这个成语`;
+        }
+
+        // 检查答案
+        function checkAnswer(selectedChar) {
+            if (selectedCell === null) return;
+            
+            const cell = grid[selectedCell];
+            // 通过data-index查找对应的DOM元素
+            const currentCellElement = document.querySelector(`.cell[data-index="${selectedCell}"]`);
+            
+            if (!currentCellElement) return; // 如果找不到元素则退出
+            
+            totalAttempts++; // 增加尝试次数
+            
+            if (selectedChar === cell.correctChar) {
+                // 答案正确
+                correctAttempts++; // 增加正确次数
+                currentCellElement.classList.add('correct');
+                score += 10;
+                eliminated++;
+                
+                setTimeout(() => {
+                    currentCellElement.classList.remove('correct');
+                    currentCellElement.classList.add('eliminating');
+                    
+                    setTimeout(() => {
+                        cell.eliminated = true;
+                        renderGrid();
+                        updateScore();
+                        checkGameOver();
+                    }, 600);
+                }, 500);
+                
+                document.getElementById('hint').textContent = `✅ 正确！完整成语：${cell.idiom}`;
+            } else {
+                // 答案错误
+                currentCellElement.classList.add('wrong');
+                score = Math.max(0, score - 5);
+                updateScore();
+                
+                setTimeout(() => {
+                    currentCellElement.classList.remove('wrong');
+                }, 500);
+                
+                document.getElementById('hint').textContent = `❌ 错误！正确答案是：${cell.correctChar}`;
+            }
+            
+            // 清除选项
+            setTimeout(() => {
+                document.getElementById('options').innerHTML = '';
+                selectedCell = null;
+            }, 1500);
+        }
+
+        // 更新分数
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('eliminated').textContent = eliminated;
+            
+            // 计算正确率
+            let accuracy = 0;
+            if (totalAttempts > 0) {
+                accuracy = Math.round((correctAttempts / totalAttempts) * 100);
+            }
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        // 检查游戏是否结束
+        function checkGameOver() {
+            if (eliminated === 48) {
+                setTimeout(() => {
+                    alert(`🎉 恭喜通关！\n总分：${score}\n消除成语：${eliminated}个`);
+                }, 800);
+            }
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            selectedCell = null;
+            totalAttempts = 0;
+            correctAttempts = 0;
+            document.getElementById('options').innerHTML = '';
+            document.getElementById('hint').textContent = '点击一个成语，然后选择正确的字来填空';
+            initGame();
+        }
+
+        // 页面加载时初始化游戏
+        window.onload = initGame;
+    </script>
+</body>
+</html>
