@@ -601,6 +601,29 @@
                 oscillator.stop(now + 0.15);
             }
 
+            // 播放选中色块音效
+            playSelectSound() {
+                const ctx = this.audioContext;
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                // 清脆的点击音效 - 短促明快
+                const now = ctx.currentTime;
+                oscillator.frequency.setValueAtTime(800, now);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+                
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.25, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                
+                oscillator.start(now);
+                oscillator.stop(now + 0.08);
+            }
+
             initBoard() {
                 // 先用随机数填充整个棋盘
                 this.board = [];
@@ -824,6 +847,7 @@
                 // 如果是第一个选择的方块
                 if (this.selectedBlocks.length === 0) {
                     this.selectedBlocks.push({ row, col, value, key: blockKey });
+                    this.playSelectSound(); // 播放选中音效
                     this.updateBlockSelection();
                 } else {
                     const firstBlock = this.selectedBlocks[0];
@@ -833,6 +857,7 @@
                         // 点击不同数字，清空重选
                         this.clearSelection();
                         this.selectedBlocks.push({ row, col, value, key: blockKey });
+                        this.playSelectSound(); // 播放选中音效
                         this.updateBlockSelection();
                         return;
                     }
@@ -850,6 +875,7 @@
 
                     // 添加到选中列表
                     this.selectedBlocks.push({ row, col, value, key: blockKey });
+                    this.playSelectSound(); // 播放选中音效
                     this.updateBlockSelection();
                 }
 
