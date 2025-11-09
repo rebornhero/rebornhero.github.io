@@ -123,6 +123,22 @@
             box-shadow: 0 0 0 3px #FFD700, inset 0 0 10px rgba(0, 0, 0, 0.3);
         }
 
+        /* 连线效果 */
+        .selection-line {
+            position: absolute;
+            background: rgba(255, 215, 0, 0.6);
+            height: 6px;
+            transform-origin: left center;
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
+        .game-board {
+            position: relative;
+        }
+
         .block.shake {
             animation: shake 0.5s;
         }
@@ -425,6 +441,11 @@
                 this.totalAnswers = 0;
                 this.currentQuestion = null;
                 this.answerLocked = false;
+                
+                // 触摸滑动选择相关
+                this.isDrawing = false;
+                this.lastTouchedBlock = null;
+                this.selectionLines = [];
                 
                 // 初始化音效系统
                 this.initAudio();
@@ -867,11 +888,28 @@
                 content.textContent = value;
                 block.appendChild(content);
 
-                // 同时支持鼠标点击和触摸事件
+                // 鼠标点击事件（桌面端）
                 block.addEventListener('click', () => this.handleBlockClick(row, col));
+                
+                // 触摸事件（移动端）- 支持划线选择
+                block.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.handleTouchStart(row, col, e);
+                });
+                
+                block.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    this.handleTouchMove(e);
+                });
+                
                 block.addEventListener('touchend', (e) => {
-                    e.preventDefault(); // 防止触发click事件
-                    this.handleBlockClick(row, col);
+                    e.preventDefault();
+                    this.handleTouchEnd();
+                });
+                
+                block.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    this.handleTouchEnd();
                 });
 
                 return block;
@@ -968,8 +1006,156 @@
                 this.selectedBlocks = [];
                 this.currentQuestion = null;
                 this.answerLocked = false;
+                this.isDrawing = false;
+                this.lastTouchedBlock = null;
                 this.updateBlockSelection();
                 this.clearQuestionArea();
+                this.clearSelectionLines();
+            }
+
+            // 触摸开始 - 开始划线选择
+            handleTouchStart(row, col, e) {
+                const value = this.board[row][col];
+                if (value === null || this.answerLocked) return;
+
+                // 开始新的选择
+                this.isDrawing = true;
+                this.selectedBlocks = [];
+                this.clearSelectionLines();
+                
+                const blockKey = `${row},${col}`;
+                this.selectedBlocks.push({ row, col, value, key: blockKey });
+                this.lastTouchedBlock = { row, col };
+                this.playSelectSound();
+                this.updateBlockSelection();
+            }
+
+            // 触摸移动 - 连续选择
+            handleTouchMove(e) {
+                if (!this.isDrawing || this.answerLocked) return;
+
+                const touch = e.touches[0];
+                const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (!element || !element.classList.contains('block')) return;
+
+                const row = parseInt(element.dataset.row);
+                const col = parseInt(element.dataset.col);
+                const value = this.board[row][col];
+                
+                if (value === null) return;
+
+                // 检查是否是同一个方块
+                if (this.lastTouchedBlock && 
+                    this.lastTouchedBlock.row === row && 
+                    this.lastTouchedBlock.col === col) {
+                    return;
+                }
+
+                const blockKey = `${row},${col}`;
+                const existingIndex = this.selectedBlocks.findIndex(b => b.key === blockKey);
+                
+                // 如果已经选中，检查是否是回退操作
+                if (existingIndex !== -1) {
+                    // 如果触摸的是倒数第二个方块，说明是在回退
+                    if (existingIndex === this.selectedBlocks.length - 2) {
+                        this.selectedBlocks.pop();
+                        this.lastTouchedBlock = { row, col };
+                        this.updateBlockSelection();
+                        this.updateSelectionLines();
+                    }
+                    return;
+                }
+
+                const firstBlock = this.selectedBlocks[0];
+                
+                // 检查数字是否相同
+                if (value !== firstBlock.value) {
+                    return;
+                }
+
+                // 检查是否与上一个选中的方块相邻
+                if (!this.isAdjacent(this.lastTouchedBlock, { row, col })) {
+                    return;
+                }
+
+                // 添加到选中列表
+                this.selectedBlocks.push({ row, col, value, key: blockKey });
+                this.lastTouchedBlock = { row, col };
+                this.playSelectSound();
+                this.updateBlockSelection();
+                this.updateSelectionLines();
+
+                // 更新题目
+                if (this.selectedBlocks.length >= 2) {
+                    this.updateQuestion();
+                }
+            }
+
+            // 触摸结束
+            handleTouchEnd() {
+                if (!this.isDrawing) return;
+                
+                this.isDrawing = false;
+                
+                // 如果选中的方块少于2个，清除选择
+                if (this.selectedBlocks.length < 2) {
+                    this.clearSelection();
+                } else {
+                    // 保持选择状态，等待答题
+                    this.updateQuestion();
+                }
+            }
+
+            // 绘制选择连线
+            updateSelectionLines() {
+                this.clearSelectionLines();
+                
+                if (this.selectedBlocks.length < 2) return;
+
+                const gameBoard = document.getElementById('gameBoard');
+                const boardRect = gameBoard.getBoundingClientRect();
+
+                for (let i = 0; i < this.selectedBlocks.length - 1; i++) {
+                    const block1 = this.selectedBlocks[i];
+                    const block2 = this.selectedBlocks[i + 1];
+                    
+                    const element1 = document.querySelector(`[data-row="${block1.row}"][data-col="${block1.col}"]`);
+                    const element2 = document.querySelector(`[data-row="${block2.row}"][data-col="${block2.col}"]`);
+                    
+                    if (!element1 || !element2) continue;
+
+                    const rect1 = element1.getBoundingClientRect();
+                    const rect2 = element2.getBoundingClientRect();
+
+                    const x1 = rect1.left + rect1.width / 2 - boardRect.left;
+                    const y1 = rect1.top + rect1.height / 2 - boardRect.top;
+                    const x2 = rect2.left + rect2.width / 2 - boardRect.left;
+                    const y2 = rect2.top + rect2.height / 2 - boardRect.top;
+
+                    const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+
+                    const line = document.createElement('div');
+                    line.className = 'selection-line';
+                    line.style.width = `${length}px`;
+                    line.style.left = `${x1}px`;
+                    line.style.top = `${y1}px`;
+                    line.style.transform = `rotate(${angle}deg)`;
+
+                    gameBoard.appendChild(line);
+                    this.selectionLines.push(line);
+                }
+            }
+
+            // 清除选择连线
+            clearSelectionLines() {
+                this.selectionLines.forEach(line => {
+                    if (line.parentNode) {
+                        line.parentNode.removeChild(line);
+                    }
+                });
+                this.selectionLines = [];
             }
 
             updateQuestion() {
@@ -1124,6 +1310,9 @@
             eliminateBlocks() {
                 // 播放消除音效
                 this.playEliminateSound();
+                
+                // 清除连线
+                this.clearSelectionLines();
                 
                 // 添加消除动画
                 const blocks = document.querySelectorAll('.block.selected');
