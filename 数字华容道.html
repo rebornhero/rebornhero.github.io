@@ -136,34 +136,34 @@
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            width: 600px;
+            width: 450px;
             display: flex;
             flex-direction: column;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(6, 80px);
-            grid-template-rows: repeat(6, 80px);
-            gap: 8px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(6, 53px);
+            grid-template-rows: repeat(6, 53px);
+            gap: 6px;
+            margin-bottom: 25px;
             justify-content: center;
         }
 
         .cell {
             background: linear-gradient(145deg, #f0f0f0, #ffffff);
             border: 2px solid #ddd;
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
+            font-size: 22px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-            width: 80px;
-            height: 80px;
+            width: 53px;
+            height: 53px;
             box-sizing: border-box;
             color: #333;
             -webkit-tap-highlight-color: transparent;
@@ -247,13 +247,13 @@
         }
 
         .number-btn {
-            padding: 18px;
-            font-size: 28px;
+            padding: 12px;
+            font-size: 20px;
             font-weight: bold;
             background: linear-gradient(145deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -261,7 +261,7 @@
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            min-height: 70px;
+            min-height: 50px;
         }
 
         .number-btn:hover {
@@ -296,19 +296,19 @@
         }
 
         .btn {
-            padding: 14px 35px;
-            font-size: 16px;
+            padding: 10px 24px;
+            font-size: 11px;
             border: none;
-            border-radius: 25px;
+            border-radius: 17px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 3px 7px rgba(0,0,0,0.2);
             transition: all 0.2s ease;
             font-weight: bold;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            min-height: 50px;
+            min-height: 34px;
         }
 
         .btn-restart {
@@ -346,31 +346,31 @@
         /* iPad Pro 横屏和大屏幕平板优化 */
         @media (min-width: 1024px) and (max-width: 1366px) {
             .game-container {
-                width: 700px;
-                padding: 35px;
+                width: 550px;
+                padding: 30px;
             }
             
             .grid {
-                grid-template-columns: repeat(6, 95px);
-                grid-template-rows: repeat(6, 95px);
-                gap: 10px;
+                grid-template-columns: repeat(6, 63px);
+                grid-template-rows: repeat(6, 63px);
+                gap: 7px;
             }
             
             .cell {
-                width: 95px;
-                height: 95px;
-                font-size: 38px;
+                width: 63px;
+                height: 63px;
+                font-size: 26px;
             }
             
             .number-btn {
-                padding: 22px;
-                font-size: 32px;
-                min-height: 80px;
+                padding: 15px;
+                font-size: 22px;
+                min-height: 55px;
             }
             
             .btn {
-                padding: 16px 40px;
-                font-size: 18px;
+                padding: 10px 24px;
+                font-size: 11px;
             }
         }
 
@@ -383,7 +383,7 @@
 
             .left-panel {
                 width: 100%;
-                max-width: 650px;
+                max-width: 550px;
             }
 
             .score-board {
@@ -391,41 +391,41 @@
             }
 
             .header h1 {
-                font-size: 26px;
+                font-size: 24px;
             }
 
             .game-container {
                 width: 100%;
-                max-width: 650px;
-                padding: 30px;
+                max-width: 550px;
+                padding: 25px;
             }
 
             .grid {
                 grid-template-columns: repeat(6, 1fr);
                 grid-template-rows: repeat(6, 1fr);
-                gap: 10px;
+                gap: 7px;
             }
 
             .cell {
                 width: 100%;
                 height: 100%;
                 aspect-ratio: 1;
-                font-size: 32px;
+                font-size: 22px;
             }
             
             .number-btn {
-                padding: 20px;
-                font-size: 30px;
-                min-height: 75px;
+                padding: 14px;
+                font-size: 20px;
+                min-height: 52px;
             }
             
             .number-pad {
-                gap: 12px;
+                gap: 8px;
             }
             
             .btn {
-                padding: 15px 38px;
-                font-size: 17px;
+                padding: 9px 22px;
+                font-size: 10px;
             }
         }
 
@@ -479,8 +479,8 @@
             }
             
             .btn {
-                padding: 12px 25px;
-                font-size: 14px;
+                padding: 8px 17px;
+                font-size: 9px;
             }
             
             .button-group {
