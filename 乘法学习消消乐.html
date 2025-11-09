@@ -509,119 +509,170 @@
             }
 
             initAudio() {
-                // 创建 AudioContext
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // iOS 需要用户交互后才能启用音频
+                // 延迟创建 AudioContext，等待用户交互
+                this.audioContext = null;
                 this.audioInitialized = false;
                 this.initAudioOnFirstInteraction();
             }
 
             initAudioOnFirstInteraction() {
-                const resumeAudio = () => {
-                    if (!this.audioInitialized && this.audioContext.state === 'suspended') {
-                        this.audioContext.resume().then(() => {
+                const unlockAudio = async () => {
+                    if (!this.audioInitialized) {
+                        try {
+                            // 在用户交互时创建 AudioContext
+                            if (!this.audioContext) {
+                                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            }
+                            
+                            // 恢复 AudioContext（iOS Safari 需要）
+                            if (this.audioContext.state === 'suspended') {
+                                await this.audioContext.resume();
+                            }
+                            
+                            // 播放一个静音音符来解锁音频（iOS 技巧）
+                            const oscillator = this.audioContext.createOscillator();
+                            const gainNode = this.audioContext.createGain();
+                            gainNode.gain.value = 0.001; // 几乎静音
+                            oscillator.connect(gainNode);
+                            gainNode.connect(this.audioContext.destination);
+                            oscillator.start(0);
+                            oscillator.stop(0.001);
+                            
                             this.audioInitialized = true;
-                        });
+                            console.log('音频已解锁');
+                        } catch (error) {
+                            console.error('音频解锁失败:', error);
+                        }
                     }
                 };
                 
-                // 在首次用户交互时激活音频
-                document.addEventListener('touchstart', resumeAudio, { once: true });
-                document.addEventListener('click', resumeAudio, { once: true });
+                // 监听多种用户交互事件来解锁音频
+                document.addEventListener('touchstart', unlockAudio, { once: true });
+                document.addEventListener('touchend', unlockAudio, { once: true });
+                document.addEventListener('click', unlockAudio, { once: true });
+                
+                // 在游戏板上也监听事件（确保一定会触发）
+                const gameBoard = document.getElementById('gameBoard');
+                if (gameBoard) {
+                    gameBoard.addEventListener('touchstart', unlockAudio, { once: true });
+                }
             }
 
             // 播放正确答案音效
             playCorrectSound() {
-                const ctx = this.audioContext;
-                const oscillator = ctx.createOscillator();
-                const gainNode = ctx.createGain();
+                if (!this.audioContext || !this.audioInitialized) return;
                 
-                oscillator.connect(gainNode);
-                gainNode.connect(ctx.destination);
-                
-                // 上升的音调序列 (C-E-G)
-                const now = ctx.currentTime;
-                oscillator.frequency.setValueAtTime(523.25, now); // C5
-                oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
-                oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
-                
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.6, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                
-                oscillator.start(now);
-                oscillator.stop(now + 0.4);
+                try {
+                    const ctx = this.audioContext;
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    // 上升的音调序列 (C-E-G)
+                    const now = ctx.currentTime;
+                    oscillator.frequency.setValueAtTime(523.25, now); // C5
+                    oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.6, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.4);
+                } catch (error) {
+                    console.error('播放音效失败:', error);
+                }
             }
 
             // 播放错误答案音效
             playWrongSound() {
-                const ctx = this.audioContext;
-                const oscillator = ctx.createOscillator();
-                const gainNode = ctx.createGain();
+                if (!this.audioContext || !this.audioInitialized) return;
                 
-                oscillator.connect(gainNode);
-                gainNode.connect(ctx.destination);
-                
-                // 下降的音调 (低沉的错误提示音)
-                const now = ctx.currentTime;
-                oscillator.frequency.setValueAtTime(300, now);
-                oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.3);
-                
-                oscillator.type = 'sawtooth';
-                
-                gainNode.gain.setValueAtTime(0.4, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                
-                oscillator.start(now);
-                oscillator.stop(now + 0.3);
+                try {
+                    const ctx = this.audioContext;
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    // 下降的音调 (低沉的错误提示音)
+                    const now = ctx.currentTime;
+                    oscillator.frequency.setValueAtTime(300, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                    
+                    oscillator.type = 'sawtooth';
+                    
+                    gainNode.gain.setValueAtTime(0.4, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.3);
+                } catch (error) {
+                    console.error('播放音效失败:', error);
+                }
             }
 
             // 播放消除方块音效
             playEliminateSound() {
-                const ctx = this.audioContext;
-                const oscillator = ctx.createOscillator();
-                const gainNode = ctx.createGain();
+                if (!this.audioContext || !this.audioInitialized) return;
                 
-                oscillator.connect(gainNode);
-                gainNode.connect(ctx.destination);
-                
-                // 清脆的消除音效
-                const now = ctx.currentTime;
-                oscillator.frequency.setValueAtTime(1000, now);
-                oscillator.frequency.exponentialRampToValueAtTime(2000, now + 0.15);
-                
-                oscillator.type = 'square';
-                
-                gainNode.gain.setValueAtTime(0.3, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                
-                oscillator.start(now);
-                oscillator.stop(now + 0.15);
+                try {
+                    const ctx = this.audioContext;
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    // 清脆的消除音效
+                    const now = ctx.currentTime;
+                    oscillator.frequency.setValueAtTime(1000, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(2000, now + 0.15);
+                    
+                    oscillator.type = 'square';
+                    
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.15);
+                } catch (error) {
+                    console.error('播放音效失败:', error);
+                }
             }
 
             // 播放选中色块音效
             playSelectSound() {
-                const ctx = this.audioContext;
-                const oscillator = ctx.createOscillator();
-                const gainNode = ctx.createGain();
+                if (!this.audioContext || !this.audioInitialized) return;
                 
-                oscillator.connect(gainNode);
-                gainNode.connect(ctx.destination);
-                
-                // 清脆的点击音效 - 短促明快
-                const now = ctx.currentTime;
-                oscillator.frequency.setValueAtTime(800, now);
-                oscillator.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
-                
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.25, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                
-                oscillator.start(now);
-                oscillator.stop(now + 0.08);
+                try {
+                    const ctx = this.audioContext;
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    
+                    // 清脆的点击音效 - 短促明快
+                    const now = ctx.currentTime;
+                    oscillator.frequency.setValueAtTime(800, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+                    
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.25, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.08);
+                } catch (error) {
+                    console.error('播放音效失败:', error);
+                }
             }
 
             initBoard() {
