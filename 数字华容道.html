@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字华容道</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            max-width: 1200px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 200px;
+        }
+
+        .header {
+            color: white;
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .score-board {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            color: white;
+        }
+
+        .score-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .score-item .label {
+            display: block;
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .score-item .value {
+            display: block;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .difficulty-selector {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .difficulty-selector h3 {
+            color: white;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .difficulty-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            color: #667eea;
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(145deg, #51cf66, #8ce99a);
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 80px);
+            grid-template-rows: repeat(6, 80px);
+            gap: 8px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .cell {
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease, border-color 0.3s ease;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            width: 80px;
+            height: 80px;
+            box-sizing: border-box;
+            color: #333;
+        }
+
+        .cell.fixed {
+            background: linear-gradient(145deg, #e3f2fd, #bbdefb);
+            color: #1976d2;
+            cursor: not-allowed;
+            font-weight: 900;
+        }
+
+        .cell.empty {
+            background: linear-gradient(145deg, #fff9c4, #fff59d);
+            border-color: #fbc02d;
+            cursor: pointer;
+        }
+
+        .cell.empty:hover {
+            background: linear-gradient(145deg, #fff59d, #fdd835);
+            border-color: #f57f17;
+        }
+
+        .cell.selected {
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            border-color: #ff6b6b;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        .cell.correct {
+            animation: correctAnim 0.5s ease;
+            background: linear-gradient(145deg, #51cf66, #8ce99a);
+            color: white;
+        }
+
+        .cell.wrong {
+            animation: wrongAnim 0.5s ease;
+        }
+
+        .cell.conflict {
+            border-color: #ff6b6b;
+            background: linear-gradient(145deg, #ffe0e0, #ffcccc);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes correctAnim {
+            0%, 100% { 
+                background: linear-gradient(145deg, #51cf66, #8ce99a);
+            }
+            50% { 
+                background: linear-gradient(145deg, #69db7c, #a3e9b4);
+            }
+        }
+
+        @keyframes wrongAnim {
+            0%, 100% { 
+                border-color: #ddd;
+            }
+            25%, 75% { 
+                border-color: #ff6b6b;
+            }
+        }
+
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .number-btn {
+            padding: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .number-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .number-btn:active {
+            transform: translateY(0);
+        }
+
+        .number-btn.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .hint {
+            text-align: center;
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 20px;
+            height: 24px;
+            line-height: 24px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-restart {
+            background: linear-gradient(145deg, #ff6b6b, #ff8787);
+            color: white;
+        }
+
+        .btn-hint {
+            background: linear-gradient(145deg, #4dabf7, #74c0fc);
+            color: white;
+        }
+
+        .btn-check {
+            background: linear-gradient(145deg, #51cf66, #8ce99a);
+            color: white;
+        }
+
+        .btn-home {
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 1000px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .left-panel {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .score-board {
+                flex-direction: row;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .game-container {
+                width: 100%;
+                max-width: 600px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: repeat(6, 1fr);
+            }
+
+            .cell {
+                width: 100%;
+                height: 100%;
+                aspect-ratio: 1;
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="header">
+                <h1>🧩 数字华容道</h1>
+            </div>
+            
+            <div class="score-board">
+                <div class="score-item">
+                    <span class="label">⏱️ 时间</span>
+                    <span class="value" id="time">0:00</span>
+                </div>
+                <div class="score-item">
+                    <span class="label">🎯 完成度</span>
+                    <span class="value" id="progress">0%</span>
+                </div>
+                <div class="score-item">
+                    <span class="label">💡 提示剩余</span>
+                    <span class="value" id="hints">3</span>
+                </div>
+            </div>
+
+            <div class="difficulty-selector">
+                <h3>🎮 选择难度</h3>
+                <div class="difficulty-buttons">
+                    <button class="difficulty-btn active" onclick="changeDifficulty('easy')">简单 (20个空格)</button>
+                    <button class="difficulty-btn" onclick="changeDifficulty('medium')">中等 (25个空格)</button>
+                    <button class="difficulty-btn" onclick="changeDifficulty('hard')">困难 (30个空格)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <div class="grid" id="grid"></div>
+            
+            <div class="number-pad" id="numberPad"></div>
+            
+            <div class="hint" id="hint">选择一个空格，然后选择数字填入</div>
+            
+            <div class="button-group">
+                <button class="btn btn-restart" onclick="restartGame()">🔄 重新开始</button>
+                <button class="btn btn-hint" onclick="useHint()">💡 提示</button>
+                <button class="btn btn-check" onclick="checkSolution()">✅ 检查</button>
+                <a href="index.html" class="btn btn-home">🏠 返回首页</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let grid = [];
+        let solution = [];
+        let selectedCell = null;
+        let difficulty = 'easy';
+        let hintsRemaining = 3;
+        let startTime = null;
+        let timerInterval = null;
+        let emptyCount = 20;
+
+        const difficultySettings = {
+            easy: 20,
+            medium: 25,
+            hard: 30
+        };
+
+        // 初始化游戏
+        function initGame() {
+            clearInterval(timerInterval);
+            startTime = Date.now();
+            hintsRemaining = 3;
+            selectedCell = null;
+            emptyCount = difficultySettings[difficulty];
+            
+            // 生成完整的解决方案
+            generateSolution();
+            
+            // 创建游戏网格（移除部分数字）
+            createPuzzle();
+            
+            // 渲染界面
+            renderGrid();
+            renderNumberPad();
+            updateStats();
+            
+            // 启动计时器
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // 生成完整的6x6数独解决方案
+        function generateSolution() {
+            solution = Array(6).fill(null).map(() => Array(6).fill(0));
+            
+            // 使用回溯算法生成有效的6x6数独
+            fillGrid(0, 0);
+        }
+
+        // 回溯算法填充网格
+        function fillGrid(row, col) {
+            if (row === 6) return true;
+            if (col === 6) return fillGrid(row + 1, 0);
+
+            const numbers = [1, 2, 3, 4, 5, 6].sort(() => Math.random() - 0.5);
+            
+            for (let num of numbers) {
+                if (isValid(solution, row, col, num)) {
+                    solution[row][col] = num;
+                    if (fillGrid(row, col + 1)) return true;
+                    solution[row][col] = 0;
+                }
+            }
+            
+            return false;
+        }
+
+        // 检查数字放置是否有效
+        function isValid(grid, row, col, num) {
+            // 检查行
+            for (let x = 0; x < 6; x++) {
+                if (grid[row][x] === num) return false;
+            }
+            
+            // 检查列
+            for (let x = 0; x < 6; x++) {
+                if (grid[x][col] === num) return false;
+            }
+            
+            // 检查2x3宫格
+            const boxRow = Math.floor(row / 2) * 2;
+            const boxCol = Math.floor(col / 3) * 3;
+            for (let i = 0; i < 2; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (grid[boxRow + i][boxCol + j] === num) return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // 创建谜题（移除部分数字）
+        function createPuzzle() {
+            grid = solution.map(row => [...row]);
+            
+            let removed = 0;
+            const positions = [];
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    positions.push([i, j]);
+                }
+            }
+            
+            // 随机打乱位置
+            positions.sort(() => Math.random() - 0.5);
+            
+            // 移除指定数量的数字
+            for (let i = 0; i < emptyCount && i < positions.length; i++) {
+                const [row, col] = positions[i];
+                grid[row][col] = 0;
+                removed++;
+            }
+        }
+
+        // 渲染网格
+        function renderGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    
+                    if (grid[i][j] === 0) {
+                        cell.classList.add('empty');
+                        cell.textContent = '';
+                        cell.onclick = () => selectCell(i, j);
+                    } else {
+                        if (solution[i][j] === grid[i][j] && grid[i][j] !== 0) {
+                            // 初始固定的数字
+                            const originalGrid = [];
+                            for (let r = 0; r < 6; r++) {
+                                originalGrid[r] = [];
+                                for (let c = 0; c < 6; c++) {
+                                    originalGrid[r][c] = grid[r][c];
+                                }
+                            }
+                            
+                            if (isInitialCell(i, j)) {
+                                cell.classList.add('fixed');
+                                cell.textContent = grid[i][j];
+                            } else {
+                                cell.textContent = grid[i][j];
+                                cell.onclick = () => selectCell(i, j);
+                            }
+                        } else {
+                            cell.textContent = grid[i][j];
+                            cell.onclick = () => selectCell(i, j);
+                        }
+                    }
+                    
+                    // 检查冲突
+                    if (grid[i][j] !== 0 && !isValid(grid, i, j, grid[i][j])) {
+                        cell.classList.add('conflict');
+                    }
+                    
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        // 判断是否是初始格子
+        function isInitialCell(row, col) {
+            // 通过重新生成谜题来判断
+            const tempGrid = solution.map(r => [...r]);
+            const positions = [];
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    positions.push([i, j]);
+                }
+            }
+            positions.sort(() => Math.random() - 0.5);
+            
+            for (let i = 0; i < emptyCount && i < positions.length; i++) {
+                const [r, c] = positions[i];
+                tempGrid[r][c] = 0;
+            }
+            
+            return tempGrid[row][col] !== 0;
+        }
+
+        // 渲染数字键盘
+        function renderNumberPad() {
+            const padElement = document.getElementById('numberPad');
+            padElement.innerHTML = '';
+            
+            for (let i = 1; i <= 6; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'number-btn';
+                btn.textContent = i;
+                btn.onclick = () => fillNumber(i);
+                padElement.appendChild(btn);
+            }
+        }
+
+        // 选择格子
+        function selectCell(row, col) {
+            // 检查是否是固定格子
+            const cells = document.querySelectorAll('.cell');
+            const index = row * 6 + col;
+            if (cells[index].classList.contains('fixed')) {
+                return;
+            }
+            
+            selectedCell = { row, col };
+            
+            // 更新选中状态
+            cells.forEach(cell => cell.classList.remove('selected'));
+            cells[index].classList.add('selected');
+            
+            document.getElementById('hint').textContent = `已选择格子 (${row + 1}, ${col + 1})，请选择数字填入`;
+        }
+
+        // 填入数字
+        function fillNumber(num) {
+            if (!selectedCell) {
+                document.getElementById('hint').textContent = '请先选择一个空格';
+                return;
+            }
+            
+            const { row, col } = selectedCell;
+            const cells = document.querySelectorAll('.cell');
+            const index = row * 6 + col;
+            
+            if (cells[index].classList.contains('fixed')) {
+                return;
+            }
+            
+            // 检查是否正确
+            if (num === solution[row][col]) {
+                // 正确答案才填入
+                grid[row][col] = num;
+                cells[index].classList.add('correct');
+                setTimeout(() => {
+                    cells[index].classList.remove('correct');
+                    renderGrid();
+                    updateStats();
+                    checkWin();
+                }, 500);
+                document.getElementById('hint').textContent = '✅ 正确！';
+            } else {
+                // 错误答案不填入，只显示错误动画
+                cells[index].classList.add('wrong');
+                setTimeout(() => {
+                    cells[index].classList.remove('wrong');
+                }, 500);
+                document.getElementById('hint').textContent = '❌ 这个位置不对，再想想';
+            }
+            
+            selectedCell = null;
+        }
+
+        // 使用提示
+        function useHint() {
+            if (hintsRemaining <= 0) {
+                document.getElementById('hint').textContent = '提示已用完！';
+                return;
+            }
+            
+            // 找到一个空格子填入正确答案
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    if (grid[i][j] === 0 || grid[i][j] !== solution[i][j]) {
+                        grid[i][j] = solution[i][j];
+                        hintsRemaining--;
+                        renderGrid();
+                        updateStats();
+                        checkWin();
+                        document.getElementById('hint').textContent = `💡 已为你填入一个数字！剩余提示：${hintsRemaining}`;
+                        return;
+                    }
+                }
+            }
+        }
+
+        // 检查解答
+        function checkSolution() {
+            let correct = true;
+            let filled = true;
+            
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    if (grid[i][j] === 0) {
+                        filled = false;
+                    } else if (grid[i][j] !== solution[i][j]) {
+                        correct = false;
+                    }
+                }
+            }
+            
+            if (!filled) {
+                document.getElementById('hint').textContent = '还有空格未填写！';
+            } else if (correct) {
+                checkWin();
+            } else {
+                document.getElementById('hint').textContent = '有些数字不对，请仔细检查！';
+            }
+        }
+
+        // 检查是否获胜
+        function checkWin() {
+            let complete = true;
+            
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    if (grid[i][j] !== solution[i][j]) {
+                        complete = false;
+                        break;
+                    }
+                }
+                if (!complete) break;
+            }
+            
+            if (complete) {
+                clearInterval(timerInterval);
+                const timeStr = document.getElementById('time').textContent;
+                setTimeout(() => {
+                    alert(`🎉 恭喜通关！\n用时：${timeStr}\n提示使用：${3 - hintsRemaining}次`);
+                }, 500);
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            // 更新完成度
+            let filled = 0;
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    if (grid[i][j] === solution[i][j]) {
+                        filled++;
+                    }
+                }
+            }
+            const progress = Math.round((filled / 36) * 100);
+            document.getElementById('progress').textContent = progress + '%';
+            
+            // 更新提示剩余
+            document.getElementById('hints').textContent = hintsRemaining;
+        }
+
+        // 更新计时器
+        function updateTimer() {
+            if (!startTime) return;
+            
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 切换难度
+        function changeDifficulty(level) {
+            difficulty = level;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 重新开始游戏
+            restartGame();
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            document.getElementById('hint').textContent = '选择一个空格，然后选择数字填入';
+            initGame();
+        }
+
+        // 页面加载时初始化游戏
+        window.onload = initGame;
+    </script>
+</body>
+</html>
