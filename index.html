@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>儿童数学学习游戏中心</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .intro {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .intro h2 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .feature-item {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e0e5ff;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+
+        .feature-desc {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .game-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .game-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .game-card:active {
+            transform: scale(0.98);
+        }
+
+        .game-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .game-desc {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            opacity: 0.95;
+        }
+
+        .game-highlights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .highlight-tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            color: #888;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .game-title {
+                font-size: 24px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 触摸优化 */
+        .game-card {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 儿童数学学习游戏中心</h1>
+        <p class="subtitle">寓教于乐，让孩子爱上数学！</p>
+
+        <div class="intro">
+            <h2>🌟 欢迎来到数学游戏世界</h2>
+            <p>这里有专为儿童设计的趣味数学学习游戏，通过游戏化的方式让孩子在玩耍中掌握数学知识。</p>
+            <p>每个游戏都经过精心设计，结合了教育心理学原理，让学习变得有趣而高效！</p>
+        </div>
+
+        <h2 style="color: #667eea; margin-bottom: 20px; font-size: 24px;">🎲 选择你的游戏</h2>
+
+        <div class="game-list">
+            <a href="乘法学习消消乐.html" class="game-card">
+                <div class="game-title">
+                    <span>🧩</span>
+                    <span>乘法学习消消乐</span>
+                </div>
+                <div class="game-desc">
+                    通过点击相邻的相同数字色块进行消除，同时练习乘法运算。色彩鲜艳的方块设计配合不同形状，让孩子在消除游戏的乐趣中掌握乘法口诀表！
+                </div>
+                <div class="game-highlights">
+                    <span class="highlight-tag">✨ 18×9 大棋盘</span>
+                    <span class="highlight-tag">🎵 音效反馈</span>
+                    <span class="highlight-tag">🔢 1-9乘法练习</span>
+                    <span class="highlight-tag">📊 连击系统</span>
+                    <span class="highlight-tag">📱 触摸支持</span>
+                </div>
+            </a>
+
+            <!-- 预留其他游戏位置 -->
+            <div style="background: #f8f9ff; padding: 30px; border-radius: 15px; text-align: center; border: 2px dashed #d0d5ff;">
+                <div style="font-size: 48px; margin-bottom: 10px;">🚀</div>
+                <div style="color: #888; font-size: 18px; font-weight: bold; margin-bottom: 5px;">更多游戏即将推出</div>
+                <div style="color: #aaa; font-size: 14px;">加法冒险、除法挑战、分数闯关...</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 提示：建议在横屏模式下获得最佳游戏体验</p>
+            <p style="margin-top: 10px;">© 2025 儿童数学学习游戏中心 | 让学习充满乐趣</p>
+        </div>
+    </div>
+
+    <script>
+        // 触摸反馈优化
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.98)';
+            });
+            
+            card.addEventListener('touchend', function() {
+                this.style.transform = '';
+            });
+        });
+
+        // 页面加载动画
+        window.addEventListener('load', () => {
+            document.querySelector('.container').style.opacity = '0';
+            setTimeout(() => {
+                document.querySelector('.container').style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
