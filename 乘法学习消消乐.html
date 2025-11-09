@@ -51,11 +51,13 @@
         .score-board {
             display: flex;
             justify-content: space-around;
+            align-items: center;
             margin-bottom: 5px;
             padding: 15px 20px;
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             border-radius: 6px;
             color: white;
+            gap: 15px;
         }
 
         .score-item {
@@ -257,6 +259,24 @@
             -webkit-user-select: none;
         }
 
+        .restart-btn-small {
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: 2px solid white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
         .restart-btn:active {
             transform: scale(0.95);
         }
@@ -265,6 +285,19 @@
             .restart-btn:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            }
+        }
+
+        .restart-btn-small:active {
+            transform: scale(0.92);
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .restart-btn-small:hover {
+                background: white;
+                color: #f5576c;
+                transform: translateY(-2px);
+                box-shadow: 0 3px 10px rgba(255, 255, 255, 0.4);
             }
         }
 
@@ -417,6 +450,7 @@
                 <div class="score-label">正确率</div>
                 <div class="score-value" id="accuracy">100%</div>
             </div>
+            <button class="restart-btn-small" id="restartBtn" title="重新开始">🔄 重新开始</button>
         </div>
 
         <div class="game-board" id="gameBoard"></div>
@@ -466,6 +500,7 @@
                 this.init();
                 this.initFullscreen();
                 this.initOrientationDetection();
+                this.initRestartButton();
             }
 
             initFullscreen() {
@@ -521,6 +556,41 @@
                 checkOrientation();
                 window.addEventListener('orientationchange', checkOrientation);
                 window.addEventListener('resize', checkOrientation);
+            }
+
+            initRestartButton() {
+                const restartBtn = document.getElementById('restartBtn');
+                if (!restartBtn) return;
+
+                const handleRestart = () => {
+                    // 重置所有游戏状态
+                    this.score = 0;
+                    this.combo = 0;
+                    this.correctAnswers = 0;
+                    this.totalAnswers = 0;
+                    this.selectedBlocks = [];
+                    this.currentQuestion = null;
+                    this.answerLocked = false;
+                    this.isDrawing = false;
+                    this.lastTouchedBlock = null;
+                    
+                    // 清除连线
+                    this.clearSelectionLines();
+                    
+                    // 重新初始化游戏板
+                    this.initBoard();
+                    this.renderBoard();
+                    this.updateScore();
+                    this.clearQuestionArea();
+                };
+
+                restartBtn.addEventListener('click', handleRestart);
+                
+                // 触摸事件支持
+                restartBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handleRestart();
+                });
             }
 
             init() {
