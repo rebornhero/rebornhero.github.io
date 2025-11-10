@@ -1456,8 +1456,8 @@ class MultiplicationGame {
                 }
                 
                 this.level++;
-                this.score = 0; // 清空总分
-                this.levelScore = 0;
+                // 不清空总分，让分数累加
+                this.levelScore = 0; // 重置当前关卡分数
                 this.combo = 0; // 重置连击
                 this.correctAnswers = 0;
                 this.totalAnswers = 0;
