@@ -490,6 +490,10 @@
             
             <div class="score-board">
                 <div class="score-item">
+                    <span class="label">🎮 关卡</span>
+                    <span class="value" id="level">1</span>
+                </div>
+                <div class="score-item">
                     <span class="label">🎯 得分</span>
                     <span class="value" id="score">0</span>
                 </div>
@@ -498,8 +502,8 @@
                     <span class="value" id="eliminated">0</span>
                 </div>
                 <div class="score-item">
-                    <span class="label">📊 正确率</span>
-                    <span class="value" id="accuracy">0%</span>
+                    <span class="label">🏁 目标</span>
+                    <span class="value" id="target">500</span>
                 </div>
             </div>
             
@@ -856,14 +860,14 @@
         let currentOptions = [];
         let totalAttempts = 0;
         let correctAttempts = 0;
+        let level = 1;
+        let targetScore = 500;
+        let levelScore = 0; // 当前关卡分数
 
         // 初始化游戏
         function initGame() {
             grid = [];
-            score = 0;
             eliminated = 0;
-            totalAttempts = 0;
-            correctAttempts = 0;
             updateScore();
             
             // 从词库中随机选择 5*6=30 个成语
@@ -1002,7 +1006,12 @@
                 // 答案正确
                 correctAttempts++; // 增加正确次数
                 currentCellElement.classList.add('correct');
-                score += 10;
+                
+                // 关卡越高，得分越高
+                const levelMultiplier = 1 + (level - 1) * 0.2; // 每关增加20%分数
+                const earnedScore = Math.round(10 * levelMultiplier);
+                score += earnedScore;
+                levelScore += earnedScore;
                 eliminated++;
                 
                 setTimeout(() => {
@@ -1013,6 +1022,7 @@
                         cell.eliminated = true;
                         renderGrid();
                         updateScore();
+                        checkLevelComplete();
                         checkGameOver();
                     }, 600);
                 }, 500);
@@ -1040,15 +1050,32 @@
 
         // 更新分数
         function updateScore() {
+            document.getElementById('level').textContent = level;
             document.getElementById('score').textContent = score;
             document.getElementById('eliminated').textContent = eliminated;
-            
-            // 计算正确率
-            let accuracy = 0;
-            if (totalAttempts > 0) {
-                accuracy = Math.round((correctAttempts / totalAttempts) * 100);
+            document.getElementById('target').textContent = targetScore;
+        }
+
+        // 检查关卡是否完成
+        function checkLevelComplete() {
+            if (levelScore >= targetScore) {
+                setTimeout(() => {
+                    alert(`🎉 恭喜过关！\n关卡 ${level} 完成\n本关得分：${levelScore}`);
+                    nextLevel();
+                }, 800);
             }
-            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        // 下一关
+        function nextLevel() {
+            level++;
+            score = 0; // 清空总分
+            levelScore = 0;
+            targetScore = 500 + (level - 1) * 200; // 每关增加200分目标
+            eliminated = 0;
+            totalAttempts = 0;
+            correctAttempts = 0;
+            initGame();
         }
 
         // 检查游戏是否结束
@@ -1065,6 +1092,10 @@
             selectedCell = null;
             totalAttempts = 0;
             correctAttempts = 0;
+            score = 0;
+            level = 1;
+            targetScore = 500;
+            levelScore = 0;
             document.getElementById('options').innerHTML = '';
             document.getElementById('hint').textContent = '点击一个成语，然后选择正确的字来填空';
             initGame();

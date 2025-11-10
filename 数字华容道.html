@@ -498,6 +498,10 @@
             
             <div class="score-board">
                 <div class="score-item">
+                    <span class="label">🎮 关卡</span>
+                    <span class="value" id="level">1</span>
+                </div>
+                <div class="score-item">
                     <span class="label">⏱️ 时间</span>
                     <span class="value" id="time">0:00</span>
                 </div>
@@ -547,11 +551,12 @@
         let startTime = null;
         let timerInterval = null;
         let emptyCount = 20;
+        let level = 1;
 
         const difficultySettings = {
-            easy: 20,
-            medium: 25,
-            hard: 30
+            easy: { empty: 20, time: 300 },    // 5分钟
+            medium: { empty: 25, time: 240 },  // 4分钟
+            hard: { empty: 30, time: 180 }     // 3分钟
         };
 
         // 初始化游戏
@@ -560,7 +565,7 @@
             startTime = Date.now();
             hintsRemaining = 3;
             selectedCell = null;
-            emptyCount = difficultySettings[difficulty];
+            emptyCount = difficultySettings[difficulty].empty;
             
             // 生成完整的解决方案
             generateSolution();
@@ -855,14 +860,48 @@
             if (complete) {
                 clearInterval(timerInterval);
                 const timeStr = document.getElementById('time').textContent;
+                
                 setTimeout(() => {
-                    alert(`🎉 恭喜通关！\n用时：${timeStr}\n提示使用：${3 - hintsRemaining}次`);
+                    alert(`🎉 恭喜通关！
+关卡 ${level} 完成
+用时：${timeStr}
+提示使用：${3 - hintsRemaining}次`);
+                    nextLevel();
                 }, 500);
             }
         }
 
+        // 下一关
+        function nextLevel() {
+            level++;
+            document.getElementById('level').textContent = level;
+            
+            // 难度递增：每3关增加一个难度
+            if (level <= 3) {
+                difficulty = 'easy';
+            } else if (level <= 6) {
+                difficulty = 'medium';
+            } else {
+                difficulty = 'hard';
+            }
+            
+            // 更新难度按钮状态
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const diffButtons = document.querySelectorAll('.difficulty-btn');
+            if (difficulty === 'easy') diffButtons[0].classList.add('active');
+            else if (difficulty === 'medium') diffButtons[1].classList.add('active');
+            else diffButtons[2].classList.add('active');
+            
+            initGame();
+        }
+
         // 更新统计信息
         function updateStats() {
+            // 更新关卡
+            document.getElementById('level').textContent = level;
+            
             // 更新完成度
             let filled = 0;
             for (let i = 0; i < 6; i++) {
@@ -905,6 +944,7 @@
 
         // 重新开始游戏
         function restartGame() {
+            level = 1;
             document.getElementById('hint').textContent = '选择一个空格，然后选择数字填入';
             initGame();
         }
