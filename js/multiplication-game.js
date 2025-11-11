@@ -1028,7 +1028,8 @@ class MultiplicationGame {
                 }
                 
                 document.getElementById('level').textContent = this.level;
-                document.getElementById('score').textContent = this.score;
+                // 页面显示当前关卡分数
+                document.getElementById('score').textContent = this.levelScore;
                 document.getElementById('combo').textContent = this.combo;
                 document.getElementById('target').textContent = this.targetScore;
                 
